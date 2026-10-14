@@ -1,1 +1,292 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <title>Kelas Kita — X TKJ 2</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">KK</div>
+        <div>
+          <h2>Kelas Kita</h2>
+          <p>X TKJ 2</p>
+        </div>
+      </div>
+
+      <div class="menu-label">MENU UTAMA</div>
+
+      <nav class="navigation">
+        <button class="nav-link active" data-page="dashboard">
+          <span>⌂</span> Dashboard
+        </button>
+        <button class="nav-link" data-page="tugas">
+          <span>▤</span> Tugas Mingguan
+        </button>
+        <button class="nav-link" data-page="seragam">
+          <span>♧</span> Seragam & Atribut
+        </button>
+        <button class="nav-link" data-page="jadwal">
+          <span>▦</span> Jadwal Pelajaran
+        </button>
+        <button class="nav-link" data-page="piket">
+          <span>✓</span> Piket Kelas
+        </button>
+        <button class="nav-link" data-page="taruna">
+          <span>♙</span> Report Taruna
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-dot"></div>
+        <span>Portal kelas X TKJ 2</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle"
+          aria-label="Buka menu">☰</button>
+
+        <div class="breadcrumb">
+          <span>Kelas Kita</span>
+          <span>/</span>
+          <strong id="currentPage">Dashboard</strong>
+        </div>
+
+        <div class="class-badge">X TKJ 2</div>
+      </header>
+
+      <section class="page-container">
+
+        <section class="page active" id="page-dashboard">
+          <div class="welcome">
+            <div>
+              <span class="eyebrow">PORTAL INFORMASI KELAS</span>
+              <h1>Halo, warga X TKJ 2! 👋</h1>
+              <p>Semua informasi kelas dalam satu tempat.</p>
+            </div>
+            <div class="welcome-icon">💻</div>
+          </div>
+
+          <div class="section-heading">
+            <div>
+              <h2>Ringkasan kelas</h2>
+              <p>Informasi yang perlu kamu ketahui.</p>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <button class="summary-card" data-open="tugas">
+              <div class="summary-icon purple">▤</div>
+              <span>Tugas tercatat</span>
+              <strong id="countTugas">0</strong>
+              <small>Lihat tugas kelas →</small>
+            </button>
+
+            <button class="summary-card" data-open="jadwal">
+              <div class="summary-icon blue">▦</div>
+              <span>Jadwal pelajaran</span>
+              <strong id="countJadwal">0</strong>
+              <small>Lihat jadwal →</small>
+            </button>
+
+            <button class="summary-card" data-open="piket">
+              <div class="summary-icon green">✓</div>
+              <span>Data piket</span>
+              <strong id="countPiket">0</strong>
+              <small>Lihat jadwal piket →</small>
+            </button>
+
+            <button class="summary-card" data-open="taruna">
+              <div class="summary-icon orange">♙</div>
+              <span>Data taruna</span>
+              <strong id="countTaruna">0</strong>
+              <small>Lihat data →</small>
+            </button>
+          </div>
+
+          <div class="content-grid">
+            <div class="panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Informasi terbaru</h2>
+                  <p>Update dari pengurus kelas.</p>
+                </div>
+                <span class="live-label">● Lokal</span>
+              </div>
+              <div id="recentInfo" class="empty-state">
+                <div class="empty-icon">📭</div>
+                <strong>Belum ada informasi</strong>
+                <p>Informasi yang ditambahkan akan muncul di sini.</p>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Akses cepat</h2>
+                  <p>Pilih informasi yang kamu butuhkan.</p>
+                </div>
+              </div>
+
+              <div class="quick-links">
+                <button data-open="tugas">📚 <span>Tugas minggu ini</span> <b>→</b></button>
+                <button data-open="seragam">👔 <span>Seragam besok</span> <b>→</b></button>
+                <button data-open="jadwal">🗓️ <span>Jadwal besok</span> <b>→</b></button>
+                <button data-open="piket">🧹 <span>Jadwal piket</span> <b>→</b></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="page-tugas">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">AKADEMIK</span>
+              <h1>Tugas Mingguan</h1>
+              <p>Catat tugas, mata pelajaran, dan batas pengumpulan.</p>
+            </div>
+            <button class="primary-button admin-only" data-action="add-tugas">
+              + Tambah tugas
+            </button>
+          </div>
+
+          <div class="panel">
+            <div class="filter-row">
+              <input id="searchTugas" type="search"
+                placeholder="Cari mata pelajaran atau tugas...">
+              <select id="filterTugas">
+                <option value="semua">Semua status</option>
+                <option value="ada">Ada tugas</option>
+                <option value="selesai">Selesai</option>
+              </select>
+            </div>
+            <div id="listTugas" class="item-list"></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-seragam">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">PERLENGKAPAN</span>
+              <h1>Seragam & Atribut</h1>
+              <p>Informasi seragam dan atribut yang harus disiapkan.</p>
+            </div>
+            <button class="primary-button admin-only" data-action="edit-seragam">
+              + Atur informasi
+            </button>
+          </div>
+
+          <div id="seragamContent"></div>
+        </section>
+
+        <section class="page" id="page-jadwal">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">PEMBELAJARAN</span>
+              <h1>Jadwal Pelajaran</h1>
+              <p>Daftar mata pelajaran berdasarkan hari.</p>
+            </div>
+            <button class="primary-button admin-only" data-action="add-jadwal">
+              + Tambah jadwal
+            </button>
+          </div>
+
+          <div class="panel">
+            <div class="filter-row">
+              <select id="filterHari">
+                <option value="semua">Semua hari</option>
+                <option>Senin</option>
+                <option>Selasa</option>
+                <option>Rabu</option>
+                <option>Kamis</option>
+                <option>Jumat</option>
+                <option>Sabtu</option>
+              </select>
+            </div>
+            <div id="listJadwal" class="item-list"></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-piket">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">KEBERSIHAN KELAS</span>
+              <h1>Piket Kelas</h1>
+              <p>Jadwal piket dan anggota setiap kelompok.</p>
+            </div>
+            <button class="primary-button admin-only" data-action="add-piket">
+              + Tambah piket
+            </button>
+          </div>
+
+          <div class="panel">
+            <div id="listPiket" class="item-list"></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-taruna">
+          <div class="page-heading">
+            <div>
+              <span class="eyebrow">DATA TARUNA</span>
+              <h1>Report Taruna</h1>
+              <p>Daftar nama taruna sesuai data yang dicatat.</p>
+            </div>
+            <button class="primary-button admin-only" data-action="add-taruna">
+              + Tambah nama
+            </button>
+          </div>
+
+          <div class="panel">
+            <div class="filter-row">
+              <input id="searchTaruna" type="search"
+                placeholder="Cari nama taruna...">
+            </div>
+            <div id="listTaruna" class="item-list"></div>
+          </div>
+        </section>
+
+      </section>
+
+      <footer class="footer">
+        <span>Kelas Kita</span>
+        <span>Portal informasi X TKJ 2</span>
+      </footer>
+    </main>
+  </div>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-action="close-modal"></div>
+    <section class="modal-box" role="dialog"
+      aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-heading">
+        <div>
+          <span class="eyebrow">KELOLA INFORMASI</span>
+          <h2 id="modalTitle">Tambah informasi</h2>
+        </div>
+        <button class="icon-button" data-action="close-modal"
+          aria-label="Tutup">✕</button>
+      </div>
+      <form id="dataForm">
+        <div id="formFields"></div>
+        <div class="modal-actions">
+          <button type="button" class="secondary-button"
+            data-action="close-modal">Batal</button>
+          <button type="submit" class="primary-button">Simpan</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+</body>
+</html>
+
