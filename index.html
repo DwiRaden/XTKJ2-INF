@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111827">
+  <meta name="theme-color" content="#09090d">
   <title>Kelas Kita — X TKJ 2</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,21 +12,21 @@
   <div class="app-container">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-icon">KK</div>
+        <div class="brand-icon">K</div>
         <div>
-          <h2>Kelas Kita</h2>
-          <p>X TKJ 2</p>
+          <strong>Kelas Kita</strong>
+          <small>X TKJ 2</small>
         </div>
       </div>
 
-      <p class="nav-label">MENU UTAMA</p>
+      <div class="nav-label">MENU UTAMA</div>
       <nav class="navigation">
-        <button class="nav-item active" data-page="dashboard">Dashboard</button>
-        <button class="nav-item" data-page="tugas">Tugas</button>
-        <button class="nav-item" data-page="seragam">Seragam</button>
-        <button class="nav-item" data-page="jadwal">Jadwal & Kegiatan</button>
-        <button class="nav-item" data-page="piket">Piket</button>
-        <button class="nav-item" data-page="report">Laporan Taruna</button>
+        <button class="nav-item active" data-page="dashboard">⌂ <span>Dashboard</span></button>
+        <button class="nav-item" data-page="tugas">▤ <span>Tugas</span></button>
+        <button class="nav-item" data-page="seragam">◈ <span>Seragam</span></button>
+        <button class="nav-item" data-page="jadwal">▦ <span>Jadwal & Kegiatan</span></button>
+        <button class="nav-item" data-page="piket">✓ <span>Piket</span></button>
+        <button class="nav-item" data-page="report">⚑ <span>Laporan Taruna</span></button>
       </nav>
 
       <div class="sidebar-footer">
@@ -38,150 +38,105 @@
     <main class="main-content">
       <header class="topbar">
         <div>
-          <p class="eyebrow">PORTAL KELAS</p>
+          <p class="eyebrow">PORTAL INFORMASI KELAS</p>
           <h1 id="page-title">Dashboard</h1>
-          <p id="page-subtitle">Informasi terbaru kelas X TKJ 2.</p>
+          <p id="page-subtitle" class="muted">Informasi terbaru kelas kita.</p>
         </div>
-        <button id="refresh-button" class="button secondary">Refresh</button>
+        <button id="refresh-button" class="button secondary" type="button">↻ Refresh</button>
       </header>
 
-      <div id="status-message" class="status-message" role="status">
-        Menyiapkan website...
-      </div>
+      <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
 
       <section id="auth-panel" class="panel auth-panel">
-        <h2>Akun Pengurus</h2>
-        <p class="muted">Login untuk mengelola informasi sesuai izin akun.</p>
+        <p class="eyebrow">AKSES PORTAL</p>
+        <h2>Selamat datang 👋</h2>
+        <p class="muted">Lihat informasi kelas atau masuk sebagai pengurus.</p>
+
         <form id="login-form" class="form-grid">
-          <label>
-            Email akun
-            <input id="login-email" type="email" autocomplete="username"
-              placeholder="pengurus@email.com" required>
+          <label for="login-email">Username pengurus
+            <input id="login-email" type="text" autocomplete="username"
+              placeholder="Masukkan username" required>
           </label>
-          <label>
-            Password
+          <label for="login-password">Password
             <input id="login-password" type="password"
-              autocomplete="current-password" required>
+              autocomplete="current-password" placeholder="Masukkan password" required>
           </label>
-          <button class="button primary" type="submit">Login</button>
+          <button class="button primary" type="submit">Login pengurus</button>
         </form>
+
+        <div class="guest-divider">atau</div>
+        <button id="guest-button" class="button secondary" type="button">Masuk sebagai Guest</button>
+
         <div id="account-info" hidden>
           <p id="account-email"></p>
-          <button id="logout-button" class="button secondary" type="button">
-            Logout
-          </button>
+          <button id="logout-button" class="button secondary" type="button">Keluar</button>
         </div>
       </section>
 
       <section id="page-dashboard" class="page active">
         <div class="summary-grid">
-          <article class="summary-card">
-            <span>Tugas</span><strong id="count-tugas">0</strong>
-          </article>
-          <article class="summary-card">
-            <span>Seragam</span><strong id="count-seragam">0</strong>
-          </article>
-          <article class="summary-card">
-            <span>Jadwal</span><strong id="count-jadwal">0</strong>
-          </article>
-          <article class="summary-card">
-            <span>Piket</span><strong id="count-piket">0</strong>
-          </article>
+          <article class="summary-card"><span>Tugas</span><strong id="count-tugas">0</strong></article>
+          <article class="summary-card"><span>Seragam</span><strong id="count-seragam">0</strong></article>
+          <article class="summary-card"><span>Jadwal & Kegiatan</span><strong id="count-jadwal">0</strong></article>
+          <article class="summary-card"><span>Piket</span><strong id="count-piket">0</strong></article>
         </div>
         <section class="panel">
-          <div class="panel-heading"><h2>Informasi Terbaru</h2></div>
+          <div class="panel-heading"><div><p class="eyebrow">UPDATE TERBARU</p><h2>Informasi terbaru</h2></div></div>
           <div id="dashboard-list" class="data-list"></div>
         </section>
       </section>
 
       <section id="page-tugas" class="page">
-        <section class="panel">
-          <div class="panel-heading"><h2>Daftar Tugas</h2></div>
-          <div id="tugas-list" class="data-list"></div>
-        </section>
+        <section class="panel"><div class="panel-heading"><h2>Daftar Tugas</h2></div><div id="tugas-list" class="data-list"></div></section>
       </section>
 
       <section id="page-seragam" class="page">
-        <section class="panel">
-          <div class="panel-heading"><h2>Informasi Seragam</h2></div>
-          <div id="seragam-list" class="data-list"></div>
-        </section>
+        <section class="panel"><div class="panel-heading"><h2>Informasi Seragam</h2></div><div id="seragam-list" class="data-list"></div></section>
       </section>
 
       <section id="page-jadwal" class="page">
-        <section class="panel">
-          <div class="panel-heading"><h2>Jadwal & Kegiatan</h2></div>
-          <p class="muted">Lihat tanggal, jam wajib tiba, dan waktu kegiatan.</p>
-          <div id="jadwal-list" class="data-list"></div>
-        </section>
+        <section class="panel"><div class="panel-heading"><h2>Jadwal & Kegiatan</h2></div><div id="jadwal-list" class="data-list"></div></section>
       </section>
 
       <section id="page-piket" class="page">
-        <section class="panel">
-          <div class="panel-heading"><h2>Jadwal Piket</h2></div>
-          <div id="piket-list" class="data-list"></div>
-        </section>
+        <section class="panel"><div class="panel-heading"><h2>Jadwal Piket</h2></div><div id="piket-list" class="data-list"></div></section>
       </section>
 
       <section id="page-report" class="page">
-        <section class="panel">
-          <div class="panel-heading"><h2>Laporan Taruna</h2></div>
-          <div id="report_taruna-list" class="data-list"></div>
-        </section>
+        <section class="panel"><div class="panel-heading"><h2>Laporan Taruna</h2></div><div id="report_taruna-list" class="data-list"></div></section>
       </section>
 
       <section id="management-panel" class="panel" hidden>
-        <div class="panel-heading"><h2>Kelola Informasi</h2></div>
-        <p class="muted">Akun hanya dapat mengubah kategori yang diizinkan.</p>
-
+        <div class="panel-heading">
+          <div><p class="eyebrow">KHUSUS PENGURUS</p><h2>Kelola informasi</h2></div>
+        </div>
         <form id="info-form" class="form-grid">
           <input id="info-id" type="hidden">
 
-          <label>
-            Kategori
-            <select id="info-category" required>
-              <option value="tugas">Tugas</option>
-              <option value="seragam">Seragam</option>
-              <option value="jadwal">Jadwal & Kegiatan</option>
-              <option value="piket">Piket</option>
-              <option value="report_taruna">Laporan Taruna</option>
-            </select>
+          <label for="info-category">Kategori
+            <select id="info-category" required></select>
           </label>
 
-          <label>
-            Judul
-            <input id="info-title" maxlength="160" required>
+          <label for="info-title">Judul
+            <input id="info-title" maxlength="150" required placeholder="Judul informasi">
           </label>
 
-          <label>
-            Tanggal (opsional)
+          <label for="info-date">Tanggal
             <input id="info-date" type="date">
           </label>
 
-          <label>
-            Isi / catatan
-            <textarea id="info-content" rows="4"
-              placeholder="Untuk jadwal, contoh:
-Jam wajib tiba: 07:30
-Jam kegiatan: 08:00
-Catatan: Bawa perlengkapan."></textarea>
+          <label for="info-content">Isi informasi
+            <textarea id="info-content" rows="5" required placeholder="Tulis informasi kelas..."></textarea>
           </label>
 
           <div class="form-actions">
-            <button id="save-button" class="button primary" type="submit">
-              Simpan informasi
-            </button>
-            <button id="cancel-edit" class="button secondary" type="button" hidden>
-              Batal edit
-            </button>
+            <button id="save-button" class="button primary" type="submit">Simpan informasi</button>
+            <button id="cancel-edit" class="button secondary" type="button" hidden>Batal edit</button>
           </div>
         </form>
-        <p class="muted">Untuk mengedit atau menghapus, gunakan tombol pada item yang kamu punya izin untuk kelola.</p>
       </section>
 
-      <footer class="main-footer">
-        Kelas Kita · X TKJ 2
-      </footer>
+      <footer class="main-footer">Kelas Kita · X TKJ 2</footer>
     </main>
   </div>
 
