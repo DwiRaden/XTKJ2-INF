@@ -1,6 +1,6 @@
 
 const SUPABASE_URL = "https://radxvffcqhjceyhedgfm.supabase.co";
-const SUPABASE_KEY = "sb_publishable_W9haCcO2DfYrZGeLyO5CHw_0sUpWDyG";
+const SUPABASE_KEY = "TEMPEL_PUBLISHABLE_KEY_KAMU";
 
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
@@ -15,11 +15,143 @@ const KATEGORI = [
   "report_taruna"
 ];
 
+const NAMA_KATEGORI = {
+  tugas: "Tugas",
+  seragam: "Seragam",
+  jadwal: "Jadwal & Kegiatan",
+  piket: "Piket",
+  report_taruna: "Laporan Taruna"
+};
+
+const DAFTAR_LIST = {
+  tugas: "tugas-list",
+  seragam: "seragam-list",
+  jadwal: "jadwal-list",
+  piket: "piket-list",
+  report_taruna: "report_taruna-list"
+};
+
+const $ = (id) => document.getElementById(id);
+
+function formatTanggal(tanggal) {
+  if (!tanggal) return "Tanggal belum ditentukan";
+
+  const [tahun, bulan, hari] = tanggal.split("-").map(Number);
+  const tanggalLokal = new Date(tahun, bulan - 1, hari);
+
+  return new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }).format(tanggalLokal);
+}
+
+function buatElemen(tag, className, teks) {
+  const elemen = document.createElement(tag);
+
+  if (className) elemen.className = className;
+  if (teks !== undefined) elemen.textContent = teks;
+
+  return elemen;
+}
+
+function bacaDetailJadwal(isi = "") {
+  const hasil = {
+    tiba: "",
+    mulai: "",
+    catatan: ""
+  };
+
+  for (const baris of isi.split("\n")) {
+    const cocok = baris.match(
+      /^\s*(tiba|wajib tiba|jam wajib tiba|mulai|jam mulai|jam kegiatan|catatan)\s*:\s*(.*)$/i
+    );
+
+    if (!cocok) continue;
+
+    const kunci = cocok[1].toLowerCase();
+    const nilai = cocok[2].trim();
+
+    if (["tiba", "wajib tiba", "jam wajib tiba"].includes(kunci)) {
+      hasil.tiba = nilai;
+    } else if (["mulai", "jam mulai", "jam kegiatan"].includes(kunci)) {
+      hasil.mulai = nilai;
+    } else if (kunci === "catatan") {
+      hasil.catatan = nilai;
+    }
+  }
+
+  if (!hasil.tiba && !hasil.mulai && !hasil.catatan) {
+    hasil.catatan = isi.trim();
+  }
+
+  return hasil;
+}
+
+function tampilkanKosong(container, pesan) {
+  container.replaceChildren(
+    buatElemen("p", "empty-state", pesan)
+  );
+}
+
+function tampilkanInformasi(container, item) {
+  const kartu = buatElemen("article", "data-item");
+  kartu.append(
+    buatElemen("h3", "", item.judul || "Tanpa judul")
+  );
+
+  if (item.kategori === "jadwal") {
+    const detail = bacaDetailJadwal(item.isi || "");
+
+    kartu.append(
+      buatElemen("p", "data-date", formatTanggal(item.tanggal))
+    );
+
+    if (detail.tiba) {
+      kartu.append(
+        buatElemen("p", "data-detail", `Wajib tiba: ${detail.tiba}`)
+      );
+    }
+
+    if (detail.mulai) {
+      kartu.append(
+        buatElemen("p", "data-detail", `Kegiatan mulai: ${detail.mulai}`)
+      );
+    }
+
+    if (detail.catatan) {
+      kartu.append(
+        buatElemen("p", "data-description", detail.catatan)
+      );
+    }
+
+    if (!detail.tiba && !detail.mulai && !detail.catatan) {
+      kartu.append(
+        buatElemen("p", "data-description", "Detail kegiatan belum diisi.")
+      );
+    }
+  } else {
+    if (item.tanggal) {
+      kartu.append(
+        buatElemen("p", "data-date", formatTanggal(item.tanggal))
+      );
+    }
+
+    if (item.isi) {
+      kartu.append(
+        buatElemen("p", "data-description", item.isi)
+      );
+    }
+  }
+
+  container.append(kartu);
+}
+
 async function ambilInformasi(kategori = null) {
   let query = supabaseClient
     .from("kelas_info")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("*");
 
   if (kategori) {
     query = query.eq("kategori", kategori);
@@ -27,110 +159,127 @@ async function ambilInformasi(kategori = null) {
 
   const { data, error } = await query;
 
-  if (error) {
-    console.error("Gagal mengambil informasi:", error.message);
-    throw error;
-  }
+  if (error) throw error;
 
-  return data;
+  return data || [];
 }
 
-async function tambahInformasi({
-  kategori,
-  judul,
-  isi = "",
-  tanggal = null
-}) {
-  if (!KATEGORI.includes(kategori)) {
-    throw new Error("Kategori tidak valid.");
-  }
+function urutkanInformasi(data, kategori) {
+  return [...data].sort((a, b) => {
+    if (kategori === "jadwal") {
+      const tanggalA = a.tanggal || "9999-12-31";
+      const tanggalB = b.tanggal || "9999-12-31";
 
-  if (!judul || !judul.trim()) {
-    throw new Error("Judul wajib diisi.");
-  }
-
-  const { data, error } = await supabaseClient
-    .from("kelas_info")
-    .insert({
-      kategori,
-      judul: judul.trim(),
-      isi: isi.trim(),
-      tanggal: tanggal || null
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Gagal menambahkan informasi:", error.message);
-    throw error;
-  }
-
-  return data;
-}
-
-async function editInformasi(id, perubahan) {
-  const dataUpdate = {};
-
-  if (perubahan.kategori !== undefined) {
-    if (!KATEGORI.includes(perubahan.kategori)) {
-      throw new Error("Kategori tidak valid.");
+      if (tanggalA !== tanggalB) {
+        return tanggalA.localeCompare(tanggalB);
+      }
     }
-    dataUpdate.kategori = perubahan.kategori;
+
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+}
+
+function tampilkanKategori(data, kategori) {
+  const container = $(DAFTAR_LIST[kategori]);
+  if (!container) return;
+
+  container.replaceChildren();
+
+  const daftar = urutkanInformasi(data, kategori);
+
+  if (daftar.length === 0) {
+    tampilkanKosong(
+      container,
+      kategori === "jadwal"
+        ? "Belum ada jadwal atau kegiatan."
+        : `Belum ada informasi ${NAMA_KATEGORI[kategori].toLowerCase()}.`
+    );
+    return;
   }
 
-  if (perubahan.judul !== undefined) {
-    if (!perubahan.judul.trim()) {
-      throw new Error("Judul wajib diisi.");
+  daftar.forEach((item) => tampilkanInformasi(container, item));
+}
+
+function tampilkanDashboard(data) {
+  for (const kategori of KATEGORI) {
+    const jumlah = data.filter(
+      (item) => item.kategori === kategori
+    ).length;
+
+    const idJumlah = `count-${kategori.replace("_taruna", "")}`;
+    const elemen = $(idJumlah);
+
+    if (elemen) elemen.textContent = jumlah;
+  }
+
+  const container = $("dashboard-list");
+  if (!container) return;
+
+  container.replaceChildren();
+
+  const terbaru = [...data]
+    .sort((a, b) =>
+      new Date(b.created_at) - new Date(a.created_at)
+    )
+    .slice(0, 5);
+
+  if (terbaru.length === 0) {
+    tampilkanKosong(container, "Belum ada informasi dari kelas.");
+    return;
+  }
+
+  terbaru.forEach((item) => {
+    const kartu = buatElemen("article", "data-item");
+
+    kartu.append(
+      buatElemen("p", "data-date", NAMA_KATEGORI[item.kategori] || item.kategori),
+      buatElemen("h3", "", item.judul || "Tanpa judul")
+    );
+
+    if (item.kategori === "jadwal" && item.tanggal) {
+      kartu.append(
+        buatElemen("p", "data-description", formatTanggal(item.tanggal))
+      );
+    } else if (item.isi) {
+      kartu.append(
+        buatElemen("p", "data-description", item.isi)
+      );
     }
-    dataUpdate.judul = perubahan.judul.trim();
-  }
 
-  if (perubahan.isi !== undefined) {
-    dataUpdate.isi = perubahan.isi.trim();
-  }
-
-  if (perubahan.tanggal !== undefined) {
-    dataUpdate.tanggal = perubahan.tanggal || null;
-  }
-
-  dataUpdate.updated_at = new Date().toISOString();
-
-  const { data, error } = await supabaseClient
-    .from("kelas_info")
-    .update(dataUpdate)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Gagal mengedit informasi:", error.message);
-    throw error;
-  }
-
-  return data;
+    container.append(kartu);
+  });
 }
 
-async function hapusInformasi(id) {
-  const { error } = await supabaseClient
-    .from("kelas_info")
-    .delete()
-    .eq("id", id);
+async function muatWebsite() {
+  const status = $("status-message");
 
-  if (error) {
-    console.error("Gagal menghapus informasi:", error.message);
-    throw error;
-  }
+  if (status) status.textContent = "Memuat informasi kelas...";
 
-  return true;
-}
-
-async function tesSupabase() {
   try {
     const data = await ambilInformasi();
-    console.log("Supabase berhasil terhubung!", data);
+
+    tampilkanDashboard(data);
+
+    for (const kategori of KATEGORI) {
+      tampilkanKategori(
+        data.filter((item) => item.kategori === kategori),
+        kategori
+      );
+    }
+
+    if (status) {
+      status.textContent = "Informasi kelas berhasil dimuat.";
+    }
   } catch (error) {
-    console.error("Tes Supabase gagal:", error.message);
+    console.error("Gagal memuat informasi:", error);
+
+    if (status) {
+      status.textContent =
+        "Gagal memuat informasi. Periksa koneksi dan pengaturan Supabase.";
+    }
   }
 }
 
-tesSupabase();
+window.tesSupabase = muatWebsite;
+
+muatWebsite();
