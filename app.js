@@ -1,6 +1,6 @@
 
 const SUPABASE_URL = "https://radxvffcqhjceyhedgfm.supabase.co";
-const SUPABASE_KEY = "TEMPEL_PUBLISHABLE_KEY_KAMU";
+const SUPABASE_KEY = "sb_publishable_W9haCcO2DfYrZGeLyO5CHw_0sUpWDyG";
 
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
