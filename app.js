@@ -1,8 +1,7 @@
 
-/* ======================================
-   KELAS KITA — APP.JS
-   ====================================== */
+"use strict";
 
+// Isi URL dan publishable key dari Supabase project milikmu.
 const SUPABASE_URL = "https://radxvffcqhjceyhedgfm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_W9haCcO2DfYrZGeLyO5CHw_0sUpWDyG";
 
@@ -11,13 +10,7 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-const KATEGORI = [
-  "tugas",
-  "seragam",
-  "jadwal",
-  "piket",
-  "report_taruna"
-];
+const KATEGORI = ["tugas", "seragam", "jadwal", "piket", "report_taruna"];
 
 const NAMA = {
   tugas: "Tugas",
@@ -35,79 +28,57 @@ const LIST_ID = {
   report_taruna: "report_taruna-list"
 };
 
-const $ = (id) => document.getElementById(id);
+const HALAMAN = {
+  dashboard: ["Dashboard", "Informasi terbaru kelas kita."],
+  tugas: ["Tugas", "Daftar tugas dan pekerjaan sekolah."],
+  seragam: ["Seragam", "Informasi seragam kelas."],
+  jadwal: ["Jadwal & Kegiatan", "Jadwal pelajaran dan kegiatan."],
+  piket: ["Piket", "Informasi jadwal piket kelas."],
+  report: ["Laporan Taruna", "Informasi laporan taruna."]
+};
+
+const $ = id => document.getElementById(id);
 
 let currentUser = null;
 let izinKategori = [];
 let semuaData = [];
+let guestMode = false;
+let sedangMemuat = false;
 
-function status(teks) {
-  $("status-message").textContent = teks;
-}
-
-function elemen(tag, className, teks) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (teks !== undefined) node.textContent = teks;
-  return node;
+function status(pesan) {
+  $("status-message").textContent = pesan || "";
 }
 
 function formatTanggal(tanggal) {
   if (!tanggal) return "Tanggal belum ditentukan";
 
-  const [y, m, d] = tanggal.split("-").map(Number);
+  const date = new Date(`${tanggal}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return tanggal;
 
-  return new Intl.DateTimeFormat("id-ID", {
-    weekday: "long",
+  return date.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
     year: "numeric"
-  }).format(new Date(y, m - 1, d));
+  });
 }
 
-function detailJadwal(isi = "") {
-  const hasil = { tiba: "", mulai: "", catatan: "" };
-
-  for (const baris of isi.split("\n")) {
-    const match = baris.match(
-      /^\s*(jam wajib tiba|wajib tiba|tiba|jam kegiatan|jam mulai|mulai|catatan)\s*:\s*(.*)$/i
-    );
-
-    if (!match) continue;
-
-    const kunci = match[1].toLowerCase();
-    const nilai = match[2].trim();
-
-    if (["jam wajib tiba", "wajib tiba", "tiba"].includes(kunci)) {
-      hasil.tiba = nilai;
-    } else if (["jam kegiatan", "jam mulai", "mulai"].includes(kunci)) {
-      hasil.mulai = nilai;
-    } else {
-      hasil.catatan = nilai;
-    }
-  }
-
-  if (!hasil.tiba && !hasil.mulai && !hasil.catatan) {
-    hasil.catatan = isi.trim();
-  }
-
-  return hasil;
-}
-
-function kosong(container, teks) {
-  container.replaceChildren(elemen("p", "empty-state", teks));
+function kosong(pesan = "Belum ada informasi.") {
+  const div = document.createElement("div");
+  div.className = "empty-state";
+  div.textContent = pesan;
+  return div;
 }
 
 function isiPilihanKategori() {
   const select = $("info-category");
   select.replaceChildren();
 
-  for (const kategori of izinKategori) {
+  KATEGORI.filter(k => izinKategori.includes(k)).forEach(kategori => {
     const option = document.createElement("option");
     option.value = kategori;
     option.textContent = NAMA[kategori];
-    select.append(option);
-  }
+    select.appendChild(option);
+  });
 }
 
 function resetForm() {
@@ -115,21 +86,17 @@ function resetForm() {
   $("info-id").value = "";
   $("save-button").textContent = "Simpan informasi";
   $("cancel-edit").hidden = true;
-
-  if (izinKategori.length) {
-    $("info-category").value = izinKategori[0];
-  }
 }
 
 function mulaiEdit(item) {
-  if (!izinKategori.includes(item.kategori)) {
-    status("Akun ini tidak memiliki izin untuk mengedit kategori tersebut.");
+  if (!currentUser || !izinKategori.includes(item.kategori)) {
+    status("Kamu tidak memiliki izin mengedit kategori ini.");
     return;
   }
 
   $("info-id").value = item.id;
   $("info-category").value = item.kategori;
-  $("info-title").value = item.judul;
+  $("info-title").value = item.judul || "";
   $("info-date").value = item.tanggal || "";
   $("info-content").value = item.isi || "";
   $("save-button").textContent = "Simpan perubahan";
@@ -142,23 +109,22 @@ function mulaiEdit(item) {
 }
 
 async function hapusItem(item) {
-  if (!izinKategori.includes(item.kategori)) {
-    status("Akun ini tidak memiliki izin menghapus kategori tersebut.");
+  if (!currentUser || !izinKategori.includes(item.kategori)) {
+    status("Kamu tidak memiliki izin menghapus kategori ini.");
     return;
   }
 
-  if (!confirm(`Hapus "${item.judul}"?`)) return;
-
-  status("Menghapus informasi...");
+  if (!confirm(`Hapus informasi "${item.judul}"?`)) return;
 
   const { error } = await supabaseClient
     .from("kelas_info")
     .delete()
-    .eq("id", item.id);
+    .eq("id", item.id)
+    .eq("kategori", item.kategori);
 
   if (error) {
     console.error(error);
-    status("Gagal menghapus. Periksa izin akun dan koneksi.");
+    status("Gagal menghapus. Periksa izin RLS.");
     return;
   }
 
@@ -167,145 +133,115 @@ async function hapusItem(item) {
 }
 
 function kartuInformasi(item) {
-  const kartu = elemen("article", "data-item");
+  const card = document.createElement("article");
+  card.className = "data-item";
 
-  kartu.append(elemen("h3", "", item.judul || "Tanpa judul"));
+  const category = document.createElement("span");
+  category.className = "eyebrow";
+  category.textContent = NAMA[item.kategori] || item.kategori;
 
-  if (item.kategori === "jadwal") {
-    const detail = detailJadwal(item.isi || "");
+  const title = document.createElement("h3");
+  title.textContent = item.judul || "Tanpa judul";
 
-    kartu.append(elemen("p", "data-date", formatTanggal(item.tanggal)));
+  const date = document.createElement("div");
+  date.className = "data-date";
+  date.textContent = formatTanggal(item.tanggal);
 
-    if (detail.tiba) {
-      kartu.append(elemen("p", "data-detail", `Wajib tiba: ${detail.tiba}`));
-    }
+  const description = document.createElement("p");
+  description.className = "data-description";
+  description.textContent = item.isi || "";
 
-    if (detail.mulai) {
-      kartu.append(elemen("p", "data-detail", `Kegiatan mulai: ${detail.mulai}`));
-    }
-
-    if (detail.catatan) {
-      kartu.append(elemen("p", "data-description", detail.catatan));
-    }
-  } else {
-    if (item.tanggal) {
-      kartu.append(elemen("p", "data-date", formatTanggal(item.tanggal)));
-    }
-
-    if (item.isi) {
-      kartu.append(elemen("p", "data-description", item.isi));
-    }
-  }
+  const details = document.createElement("div");
+  details.className = "data-detail";
+  details.append(category, title, date, description);
+  card.appendChild(details);
 
   if (currentUser && izinKategori.includes(item.kategori)) {
-    const actions = elemen("div", "data-actions");
+    const actions = document.createElement("div");
+    actions.className = "data-actions";
 
-    const edit = elemen("button", "button secondary", "Edit");
+    const edit = document.createElement("button");
+    edit.className = "button secondary";
     edit.type = "button";
+    edit.textContent = "Edit";
     edit.addEventListener("click", () => mulaiEdit(item));
 
-    const hapus = elemen("button", "button danger", "Hapus");
-    hapus.type = "button";
-    hapus.addEventListener("click", () => hapusItem(item));
+    const remove = document.createElement("button");
+    remove.className = "button danger";
+    remove.type = "button";
+    remove.textContent = "Hapus";
+    remove.addEventListener("click", () => hapusItem(item));
 
-    actions.append(edit, hapus);
-    kartu.append(actions);
+    actions.append(edit, remove);
+    card.appendChild(actions);
   }
 
-  return kartu;
+  return card;
 }
 
-function renderKategori(data, kategori) {
+function renderKategori(kategori) {
   const container = $(LIST_ID[kategori]);
-  if (!container) return;
-
   container.replaceChildren();
 
-  const daftar = [...data].filter((item) => item.kategori === kategori);
+  const items = semuaData.filter(item => item.kategori === kategori);
 
-  if (kategori === "jadwal") {
-    daftar.sort((a, b) =>
-      (a.tanggal || "9999-12-31").localeCompare(b.tanggal || "9999-12-31")
-    );
-  } else {
-    daftar.sort((a, b) =>
-      new Date(b.created_at) - new Date(a.created_at)
-    );
-  }
-
-  if (!daftar.length) {
-    kosong(
-      container,
-      kategori === "jadwal"
-        ? "Belum ada jadwal atau kegiatan."
-        : `Belum ada informasi ${NAMA[kategori].toLowerCase()}.`
-    );
+  if (!items.length) {
+    container.appendChild(kosong());
     return;
   }
 
-  daftar.forEach((item) => container.append(kartuInformasi(item)));
+  items.forEach(item => container.appendChild(kartuInformasi(item)));
 }
 
-function renderDashboard(data) {
-  for (const kategori of KATEGORI) {
-    const countId = `count-${kategori.replace("_taruna", "")}`;
-    const target = $(countId);
+function renderDashboard() {
+  $("dashboard-list").replaceChildren();
 
-    if (target) {
-      target.textContent = data.filter((item) => item.kategori === kategori).length;
-    }
-  }
+  $("count-tugas").textContent =
+    semuaData.filter(x => x.kategori === "tugas").length;
+  $("count-seragam").textContent =
+    semuaData.filter(x => x.kategori === "seragam").length;
+  $("count-jadwal").textContent =
+    semuaData.filter(x => x.kategori === "jadwal").length;
+  $("count-piket").textContent =
+    semuaData.filter(x => x.kategori === "piket").length;
 
-  const container = $("dashboard-list");
-  container.replaceChildren();
-
-  const terbaru = [...data]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 5);
-
-  if (!terbaru.length) {
-    kosong(container, "Belum ada informasi kelas.");
+  if (!semuaData.length) {
+    $("dashboard-list").appendChild(kosong());
     return;
   }
 
-  terbaru.forEach((item) => {
-    const kartu = elemen("article", "data-item");
-    kartu.append(
-      elemen("p", "data-date", NAMA[item.kategori] || item.kategori),
-      elemen("h3", "", item.judul)
-    );
-
-    if (item.kategori === "jadwal" && item.tanggal) {
-      kartu.append(elemen("p", "data-description", formatTanggal(item.tanggal)));
-    } else if (item.isi) {
-      kartu.append(elemen("p", "data-description", item.isi));
-    }
-
-    container.append(kartu);
+  semuaData.slice(0, 8).forEach(item => {
+    $("dashboard-list").appendChild(kartuInformasi(item));
   });
 }
 
 async function muatData() {
-  status("Memuat informasi kelas...");
+  if (sedangMemuat) return;
+  sedangMemuat = true;
 
-  const { data, error } = await supabaseClient
-    .from("kelas_info")
-    .select("*");
+  status("Memuat informasi...");
 
-  if (error) {
-    console.error("Gagal membaca data:", error);
-    status("Gagal membaca data. Periksa URL, publishable key, dan RLS.");
-    return;
+  try {
+    const { data, error } = await supabaseClient
+      .from("kelas_info")
+      .select("id,kategori,judul,tanggal,isi,created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    semuaData = (data || []).filter(item =>
+      KATEGORI.includes(item.kategori)
+    );
+
+    renderDashboard();
+    KATEGORI.forEach(renderKategori);
+    status(`Informasi berhasil dimuat · ${semuaData.length} data`);
+  } catch (error) {
+    console.error("Gagal memuat informasi:", error);
+    status("Gagal memuat informasi. Periksa koneksi, key, dan kebijakan RLS.");
+  } finally {
+    sedangMemuat = false;
   }
-
-  semuaData = data || [];
-  renderDashboard(semuaData);
-
-  for (const kategori of KATEGORI) {
-    renderKategori(semuaData, kategori);
-  }
-
-  status("Informasi kelas berhasil dimuat.");
 }
 
 async function muatIzin() {
@@ -319,22 +255,30 @@ async function muatIzin() {
 
     if (error) {
       console.error("Gagal membaca izin:", error);
-      status("Login berhasil, tetapi izin akun gagal dibaca.");
+      status("Izin akun gagal dibaca.");
     } else {
       izinKategori = [...new Set(
         (data || [])
-          .map((row) => row.kategori)
-          .filter((kategori) => KATEGORI.includes(kategori))
+          .map(row => row.kategori)
+          .filter(kategori => KATEGORI.includes(kategori))
       )];
     }
   }
 
-  $("login-form").hidden = Boolean(currentUser);
-  $("account-info").hidden = !currentUser;
-  $("management-panel").hidden = !currentUser || izinKategori.length === 0;
+  $("login-form").hidden = Boolean(currentUser) || guestMode;
+  $("guest-button").hidden = Boolean(currentUser) || guestMode;
+  $("account-info").hidden = !currentUser && !guestMode;
+  $("management-panel").hidden =
+    !currentUser || izinKategori.length === 0;
 
   if (currentUser) {
-    $("account-email").textContent = `Login sebagai: ${currentUser.email}`;
+    $("account-email").textContent =
+      `Login sebagai pengurus: ${currentUser.user_metadata?.username || currentUser.email}`;
+    $("logout-button").textContent = "Logout";
+  } else if (guestMode) {
+    $("account-email").textContent =
+      "Kamu masuk sebagai Guest — akses hanya baca.";
+    $("logout-button").textContent = "Keluar dari Guest";
   } else {
     $("account-email").textContent = "";
   }
@@ -353,18 +297,27 @@ async function perbaruiSesi() {
   }
 
   currentUser = data.session?.user || null;
+  guestMode = false;
 
   await muatIzin();
   await muatData();
 }
 
-$("login-form").addEventListener("submit", async (event) => {
+$("login-form").addEventListener("submit", async event => {
   event.preventDefault();
 
-  const email = $("login-email").value.trim();
+  const username = $("login-email").value.trim().toLowerCase();
   const password = $("login-password").value;
 
-  status("Mencoba login...");
+  if (!/^[a-z0-9._-]{3,30}$/.test(username)) {
+    status("Username harus 3–30 karakter: huruf, angka, titik, _ atau -.");
+    return;
+  }
+
+  // Pemetaan ini membutuhkan akun Auth yang benar-benar sudah dibuat.
+  const email = `${username}@kelas-kita.local`;
+
+  status("Memeriksa akun pengurus...");
 
   const { error } = await supabaseClient.auth.signInWithPassword({
     email,
@@ -373,40 +326,57 @@ $("login-form").addEventListener("submit", async (event) => {
 
   if (error) {
     console.error("Login gagal:", error.message);
-    status("Login gagal. Periksa email dan password akun.");
+    status("Login gagal. Periksa username dan password.");
     return;
   }
 
+  guestMode = false;
   $("login-password").value = "";
   await perbaruiSesi();
   status(
     izinKategori.length
-      ? "Login berhasil."
+      ? "Login pengurus berhasil."
       : "Login berhasil, tetapi akun belum diberi izin kategori."
   );
 });
 
-$("logout-button").addEventListener("click", async () => {
-  const { error } = await supabaseClient.auth.signOut();
-
-  if (error) {
-    console.error(error);
-    status("Gagal logout.");
+$("guest-button").addEventListener("click", async () => {
+  if (currentUser) {
+    status("Logout dari akun pengurus terlebih dahulu.");
     return;
   }
 
-  currentUser = null;
-  izinKategori = [];
+  guestMode = true;
   await muatIzin();
   await muatData();
-  status("Kamu sudah logout.");
+  status("Masuk sebagai Guest. Akses hanya baca.");
 });
 
-$("info-form").addEventListener("submit", async (event) => {
+$("logout-button").addEventListener("click", async () => {
+  if (currentUser) {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+      console.error(error);
+      status("Gagal logout.");
+      return;
+    }
+  }
+
+  currentUser = null;
+  guestMode = false;
+  izinKategori = [];
+
+  await muatIzin();
+  await muatData();
+  status("Kamu sudah keluar.");
+});
+
+$("info-form").addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!currentUser) {
-    status("Login terlebih dahulu.");
+    status("Login sebagai pengurus untuk mengelola informasi.");
     return;
   }
 
@@ -414,16 +384,19 @@ $("info-form").addEventListener("submit", async (event) => {
   const kategori = $("info-category").value;
 
   if (!izinKategori.includes(kategori)) {
-    status("Akun ini tidak memiliki izin untuk kategori tersebut.");
+    status("Akunmu tidak memiliki izin untuk kategori ini.");
     return;
   }
 
-  const judul = $("info-title").value.trim();
-  const isi = $("info-content").value.trim();
-  const tanggal = $("info-date").value || null;
+  const record = {
+    kategori,
+    judul: $("info-title").value.trim(),
+    tanggal: $("info-date").value || null,
+    isi: $("info-content").value.trim()
+  };
 
-  if (!judul) {
-    status("Judul wajib diisi.");
+  if (!record.judul || !record.isi) {
+    status("Judul dan isi wajib diisi.");
     return;
   }
 
@@ -434,21 +407,25 @@ $("info-form").addEventListener("submit", async (event) => {
   if (id) {
     result = await supabaseClient
       .from("kelas_info")
-      .update({ kategori, judul, isi, tanggal })
+      .update(record)
       .eq("id", id)
-      .select()
-      .single();
+      .eq("kategori", kategori)
+      .select("id");
   } else {
     result = await supabaseClient
       .from("kelas_info")
-      .insert({ kategori, judul, isi, tanggal })
-      .select()
-      .single();
+      .insert(record)
+      .select("id");
   }
 
   if (result.error) {
-    console.error("Gagal menyimpan:", result.error);
-    status("Gagal menyimpan. Periksa izin kategori dan koneksi.");
+    console.error(result.error);
+    status("Gagal menyimpan. Periksa izin RLS di Supabase.");
+    return;
+  }
+
+  if (!result.data?.length) {
+    status("Tidak ada data berubah. Periksa izin atau ID data.");
     return;
   }
 
@@ -459,45 +436,36 @@ $("info-form").addEventListener("submit", async (event) => {
 
 $("cancel-edit").addEventListener("click", resetForm);
 
-$("refresh-button").addEventListener("click", async () => {
-  await muatData();
-});
+$("refresh-button").addEventListener("click", muatData);
 
-const HALAMAN = {
-  dashboard: ["Dashboard", "Informasi terbaru kelas X TKJ 2."],
-  tugas: ["Tugas", "Informasi tugas dan tenggat pengumpulan."],
-  seragam: ["Seragam", "Informasi ketentuan seragam."],
-  jadwal: ["Jadwal & Kegiatan", "Jadwal pelajaran dan kegiatan sekolah."],
-  piket: ["Piket", "Pembagian dan informasi piket kelas."],
-  report: ["Laporan Taruna", "Informasi laporan kegiatan taruna."]
-};
-
-document.querySelectorAll(".nav-item").forEach((button) => {
+document.querySelectorAll(".nav-item").forEach(button => {
   button.addEventListener("click", () => {
-    const halaman = button.dataset.page;
+    const page = button.dataset.page;
 
-    document.querySelectorAll(".nav-item").forEach((item) => {
+    document.querySelectorAll(".nav-item").forEach(item => {
       item.classList.toggle("active", item === button);
     });
 
-    document.querySelectorAll(".page").forEach((page) => {
-      page.classList.toggle("active", page.id === `page-${halaman}`);
+    document.querySelectorAll(".page").forEach(section => {
+      section.classList.toggle("active", section.id === `page-${page}`);
     });
 
-    $("page-title").textContent = HALAMAN[halaman][0];
-    $("page-subtitle").textContent = HALAMAN[halaman][1];
+    const [title, subtitle] = HALAMAN[page] || HALAMAN.dashboard;
+    $("page-title").textContent = title;
+    $("page-subtitle").textContent = subtitle;
   });
 });
 
 window.tesSupabase = muatData;
 
-supabaseClient.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((_event, session) => {
   currentUser = session?.user || null;
+  guestMode = false;
 
-  // Tunda operasi tambahan agar callback auth tidak menjalankan
-  // permintaan Supabase bertingkat di dalam callback.
-  setTimeout(() => {
-    muatIzin().then(muatData);
+  // Hindari menjalankan operasi Supabase secara langsung di callback auth.
+  setTimeout(async () => {
+    await muatIzin();
+    await muatData();
   }, 0);
 });
 
