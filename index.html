@@ -5,13 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0b1120">
-  <meta name="description" content="Portal informasi kelas X TKJ 2.">
+  <meta name="description" content="Website informasi kelas X TKJ 2 SMK Global Mulia.">
   <title>Kelas Kita — X TKJ 2</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <div class="app-container">
+
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-icon">KK</div>
@@ -21,25 +21,13 @@
         </div>
       </div>
 
-      <nav class="navigation" aria-label="Navigasi utama">
-        <button class="nav-item active" data-page="dashboard">
-          Dashboard
-        </button>
-        <button class="nav-item" data-page="tugas">
-          Tugas Mingguan
-        </button>
-        <button class="nav-item" data-page="seragam">
-          Seragam & Atribut Besok
-        </button>
-        <button class="nav-item" data-page="jadwal">
-          Jadwal Pelajaran Besok
-        </button>
-        <button class="nav-item" data-page="piket">
-          Piket Kelas
-        </button>
-        <button class="nav-item" data-page="report">
-          Report Taruna
-        </button>
+      <nav class="navigation" aria-label="Menu utama">
+        <button type="button" class="nav-item active" data-page="dashboard">Dashboard</button>
+        <button type="button" class="nav-item" data-page="tugas">Tugas Mingguan</button>
+        <button type="button" class="nav-item" data-page="seragam">Seragam &amp; Atribut Besok</button>
+        <button type="button" class="nav-item" data-page="jadwal">Jadwal Pelajaran Besok</button>
+        <button type="button" class="nav-item" data-page="piket">Piket Kelas</button>
+        <button type="button" class="nav-item" data-page="report">Report Taruna</button>
       </nav>
 
       <div class="sidebar-footer">
@@ -51,21 +39,17 @@
     <main class="main-content">
       <header class="topbar">
         <div>
-          <p class="eyebrow">PORTAL INFORMASI</p>
+          <p class="eyebrow">PORTAL INFORMASI KELAS</p>
           <h1 id="page-title">Dashboard</h1>
-          <p class="subtitle">
-            Informasi kelas X TKJ 2 dalam satu tempat.
-          </p>
+          <p class="subtitle">Informasi kelas X TKJ 2 dalam satu tempat.</p>
         </div>
 
-        <button id="refresh-button" type="button">
-          Muat Ulang Data
-        </button>
+        <button type="button" id="refresh-button">Muat Ulang</button>
       </header>
 
-      <div id="status-message" role="status" aria-live="polite">
-        Menghubungkan ke database...
-      </div>
+      <p id="status-message" role="status" aria-live="polite">
+        Selamat datang di Kelas Kita.
+      </p>
 
       <section class="page active" id="page-dashboard">
         <div class="summary-grid">
@@ -76,7 +60,7 @@
           </article>
 
           <article class="panel summary-card">
-            <p>Seragam & Atribut</p>
+            <p>Seragam &amp; Atribut</p>
             <h2 id="count-seragam">0</h2>
             <span>Informasi seragam</span>
           </article>
@@ -98,52 +82,58 @@
           <div class="panel-heading">
             <div>
               <h2>Informasi Terbaru</h2>
-              <p>Informasi yang terakhir ditambahkan.</p>
+              <p>Informasi kelas yang tersedia.</p>
             </div>
           </div>
           <div id="dashboard-list" class="data-list">
-            <p class="empty-state">Memuat informasi...</p>
+            <p class="empty-state">Belum ada informasi yang ditampilkan.</p>
           </div>
         </section>
       </section>
 
-      <section class="page" id="page-tugas">
+      <section class="page" id="page-tugas" hidden>
         <section class="panel">
           <div class="panel-heading">
             <div>
               <h2>Tugas Mingguan</h2>
-              <p>Daftar tugas, mata pelajaran, dan tenggat waktu.</p>
+              <p>Mata pelajaran, detail tugas, dan tenggat pengumpulan.</p>
             </div>
           </div>
-          <div id="tugas-list" class="data-list"></div>
+          <div id="tugas-list" class="data-list">
+            <p class="empty-state">Belum ada informasi tugas.</p>
+          </div>
         </section>
       </section>
 
-      <section class="page" id="page-seragam">
+      <section class="page" id="page-seragam" hidden>
         <section class="panel">
           <div class="panel-heading">
             <div>
-              <h2>Seragam & Atribut Besok</h2>
-              <p>Informasi seragam dan atribut yang perlu disiapkan.</p>
+              <h2>Seragam &amp; Atribut Besok</h2>
+              <p>Informasi perlengkapan yang perlu disiapkan.</p>
             </div>
           </div>
-          <div id="seragam-list" class="data-list"></div>
+          <div id="seragam-list" class="data-list">
+            <p class="empty-state">Belum ada informasi seragam.</p>
+          </div>
         </section>
       </section>
 
-      <section class="page" id="page-jadwal">
+      <section class="page" id="page-jadwal" hidden>
         <section class="panel">
           <div class="panel-heading">
             <div>
               <h2>Jadwal Pelajaran Besok</h2>
-              <p>Daftar mata pelajaran dan informasi jadwal.</p>
+              <p>Mata pelajaran dan informasi jadwal kelas.</p>
             </div>
           </div>
-          <div id="jadwal-list" class="data-list"></div>
+          <div id="jadwal-list" class="data-list">
+            <p class="empty-state">Belum ada jadwal pelajaran.</p>
+          </div>
         </section>
       </section>
 
-      <section class="page" id="page-piket">
+      <section class="page" id="page-piket" hidden>
         <section class="panel">
           <div class="panel-heading">
             <div>
@@ -151,11 +141,13 @@
               <p>Jadwal piket dan anggota yang bertugas.</p>
             </div>
           </div>
-          <div id="piket-list" class="data-list"></div>
+          <div id="piket-list" class="data-list">
+            <p class="empty-state">Belum ada jadwal piket.</p>
+          </div>
         </section>
       </section>
 
-      <section class="page" id="page-report">
+      <section class="page" id="page-report" hidden>
         <section class="panel">
           <div class="panel-heading">
             <div>
@@ -163,15 +155,63 @@
               <p>Informasi laporan dan daftar taruna.</p>
             </div>
           </div>
-          <div id="report_taruna-list" class="data-list"></div>
+          <div id="report_taruna-list" class="data-list">
+            <p class="empty-state">Belum ada informasi report taruna.</p>
+          </div>
         </section>
       </section>
 
       <footer class="main-footer">
-        Kelas Kita · X TKJ 2
+        <p>Kelas Kita — X TKJ 2</p>
+        <small>SMK Global Mulia</small>
       </footer>
     </main>
   </div>
+
+  <script>
+    (() => {
+      const titles = {
+        dashboard: "Dashboard",
+        tugas: "Tugas Mingguan",
+        seragam: "Seragam & Atribut Besok",
+        jadwal: "Jadwal Pelajaran Besok",
+        piket: "Piket Kelas",
+        report: "Report Taruna"
+      };
+
+      const buttons = document.querySelectorAll("[data-page]");
+      const pages = document.querySelectorAll(".page");
+      const title = document.getElementById("page-title");
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const selected = button.dataset.page;
+
+          buttons.forEach((item) => {
+            item.classList.toggle("active", item === button);
+          });
+
+          pages.forEach((page) => {
+            const isSelected = page.id === `page-${selected}`;
+            page.classList.toggle("active", isSelected);
+            page.hidden = !isSelected;
+          });
+
+          title.textContent = titles[selected] || "Kelas Kita";
+        });
+      });
+
+      document.getElementById("refresh-button")
+        .addEventListener("click", () => {
+          if (typeof window.tesSupabase === "function") {
+            window.tesSupabase();
+          } else {
+            document.getElementById("status-message").textContent =
+              "Tombol menu berfungsi. Fungsi pemuatan data perlu disambungkan di app.js.";
+          }
+        });
+    })();
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
