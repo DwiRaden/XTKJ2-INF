@@ -1,24 +1,9 @@
 {
   "pengurus": [
-    {
-      "username": "DwiRaden",
-      "password": "1"
-    },
-    {
-      "username": "pengurus2",
-      "password": "password456"
-    },
-    {
-      "username": "pengurus3",
-      "password": "password789"
-    },
-    {
-      "username": "pengurus4",
-      "password": "password321"
-    },
-    {
-      "username": "pengurus5",
-      "password": "password654"
-    }
+    {"username": "raden", "password": "1"},
+    {"username": "pengurus2", "password": "12345"},
+    {"username": "pengurus3", "password": "12345"},
+    {"username": "pengurus4", "password": "12345"},
+    {"username": "pengurus5", "password": "12345"}
   ]
 }
