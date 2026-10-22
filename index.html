@@ -8,20 +8,107 @@
   <meta name="description" content="Website informasi kelas X TKJ 2 SMK Global Mulia.">
   <title>Kelas Kita — X TKJ 2</title>
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    [hidden] {
+      display: none !important;
+    }
+
+    body.login-required {
+      min-height: 100vh;
+    }
+
+    .auth-panel.login-screen {
+      width: min(440px, calc(100% - 32px));
+      margin: 48px auto;
+    }
+
+    .auth-panel.login-screen h2 {
+      margin-top: 0;
+    }
+
+    .auth-panel.login-screen .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .auth-panel.login-screen input,
+    .auth-panel.login-screen button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .auth-panel.login-screen #status-message {
+      overflow-wrap: anywhere;
+    }
+  </style>
 </head>
+
 <body>
   <header class="topbar">
     <a class="brand" href="#">
       <span class="brand-mark">KK</span>
-      <span><strong>Kelas Kita</strong><small>X TKJ 2</small></span>
+      <span>
+        <strong>Kelas Kita</strong>
+        <small>X TKJ 2</small>
+      </span>
     </a>
-    <button id="menu-toggle" class="menu-toggle" type="button"
-      aria-label="Buka menu" aria-expanded="false">☰</button>
+
+    <button
+      id="menu-toggle"
+      class="menu-toggle"
+      type="button"
+      aria-label="Buka menu"
+      aria-expanded="false"
+      hidden
+    >☰</button>
   </header>
 
-  <div class="app-container">
+  <!-- HALAMAN LOGIN -->
+  <section id="auth-screen" class="panel auth-panel login-screen">
+    <h2>Login Kelas Kita</h2>
+    <p class="muted">
+      Login untuk mengakses informasi kelas X TKJ 2.
+    </p>
+
+    <form id="login-form" class="form-grid">
+      <label for="login-email">Username</label>
+      <input
+        id="login-email"
+        name="username"
+        type="text"
+        minlength="3"
+        maxlength="30"
+        autocomplete="username"
+        placeholder="Masukkan username"
+        required
+      >
+
+      <label for="login-password">Password</label>
+      <input
+        id="login-password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Masukkan password"
+        required
+      >
+
+      <button class="button primary" type="submit">
+        Login
+      </button>
+    </form>
+
+    <p id="status-message" role="status" aria-live="polite">
+      Memeriksa sesi login...
+    </p>
+  </section>
+
+  <!-- APLIKASI: TERSEMBUNYI SEBELUM LOGIN -->
+  <div id="app-container" class="app-container" hidden>
     <aside id="sidebar" class="sidebar">
       <div class="nav-label">MENU KELAS</div>
+
       <nav class="navigation">
         <button class="nav-item active" data-page="dashboard">Ringkasan</button>
         <button class="nav-item" data-page="tugas">Tugas Mingguan</button>
@@ -37,47 +124,33 @@
         <div>
           <p class="eyebrow">PORTAL INFORMASI KELAS</p>
           <h1 id="page-title">Dashboard</h1>
-          <p id="page-subtitle" class="muted">Informasi terbaru kelas kita.</p>
+          <p id="page-subtitle" class="muted">
+            Informasi terbaru kelas kita.
+          </p>
         </div>
-        <button id="refresh-button" class="button secondary" type="button">
-          Muat ulang
-        </button>
-      </div>
 
-      <p id="status-message" role="status" aria-live="polite">
-        Menghubungkan ke Supabase...
-      </p>
+        <div>
+          <button
+            id="refresh-button"
+            class="button secondary"
+            type="button"
+          >
+            Muat ulang
+          </button>
 
-      <!-- LOGIN -->
-      <section class="panel auth-panel">
-        <h2>Akses Kelas</h2>
-        <p class="muted">Login untuk pengurus atau masuk sebagai Guest.</p>
-
-        <form id="login-form" class="form-grid">
-          <label for="login-email">Username pengurus</label>
-          <input id="login-email" name="username" type="text"
-            minlength="3" maxlength="30" autocomplete="username"
-            placeholder="Masukkan username" required>
-
-          <label for="login-password">Password</label>
-          <input id="login-password" name="password" type="password"
-            autocomplete="current-password"
-            placeholder="Masukkan password" required>
-
-          <button class="button primary" type="submit">Login Pengurus</button>
-        </form>
-
-        <button id="guest-button" class="button secondary" type="button">
-          Masuk sebagai Guest
-        </button>
-
-        <div id="account-info" hidden>
-          <p id="account-email"></p>
-          <button id="logout-button" class="button secondary" type="button">
+          <button
+            id="logout-button"
+            class="button secondary"
+            type="button"
+          >
             Logout
           </button>
         </div>
-      </section>
+      </div>
+
+      <div id="account-info">
+        <p id="account-email"></p>
+      </div>
 
       <!-- DASHBOARD -->
       <section id="page-dashboard" class="page active">
@@ -86,14 +159,17 @@
             <span>Tugas</span>
             <strong id="count-tugas">0</strong>
           </article>
+
           <article class="summary-card">
             <span>Seragam</span>
             <strong id="count-seragam">0</strong>
           </article>
+
           <article class="summary-card">
             <span>Jadwal</span>
             <strong id="count-jadwal">0</strong>
           </article>
+
           <article class="summary-card">
             <span>Piket</span>
             <strong id="count-piket">0</strong>
@@ -106,7 +182,7 @@
         </section>
       </section>
 
-      <!-- DAFTAR KATEGORI -->
+      <!-- KATEGORI -->
       <section id="page-tugas" class="page">
         <section class="panel">
           <h2>Tugas Mingguan</h2>
@@ -146,7 +222,7 @@
       <section id="management-panel" class="panel" hidden>
         <h2>Kelola Informasi</h2>
         <p class="muted">
-          Lu hanya bisa mengelola kategori yang sudah diberikan ke akunmu.
+          Panel ini hanya tersedia untuk pengurus terdaftar.
         </p>
 
         <form id="info-form" class="form-grid">
@@ -156,22 +232,37 @@
           <select id="info-category" required></select>
 
           <label for="info-title">Judul informasi</label>
-          <input id="info-title" type="text" maxlength="150"
-            placeholder="Contoh: Tugas Produktif TKJ" required>
+          <input
+            id="info-title"
+            type="text"
+            maxlength="150"
+            placeholder="Contoh: Tugas Produktif TKJ"
+            required
+          >
 
           <label for="info-date">Tanggal</label>
           <input id="info-date" type="date">
 
           <label for="info-content">Detail informasi</label>
-          <textarea id="info-content" rows="5" maxlength="5000"
-            placeholder="Tulis detail informasi di sini" required></textarea>
+          <textarea
+            id="info-content"
+            rows="5"
+            maxlength="5000"
+            placeholder="Tulis detail informasi di sini"
+            required
+          ></textarea>
 
           <div class="form-actions">
             <button id="save-button" class="button primary" type="submit">
               Simpan informasi
             </button>
-            <button id="cancel-edit" class="button secondary"
-              type="button" hidden>
+
+            <button
+              id="cancel-edit"
+              class="button secondary"
+              type="button"
+              hidden
+            >
               Batal edit
             </button>
           </div>
@@ -188,15 +279,20 @@
   <script src="app.js"></script>
 
   <script>
-    const menuToggle = document.getElementById("menu-toggle");
-    const sidebar = document.getElementById("sidebar");
+    (() => {
+      const menuToggle = document.getElementById("menu-toggle");
+      const sidebar = document.getElementById("sidebar");
 
-    if (menuToggle && sidebar) {
-      menuToggle.addEventListener("click", () => {
-        const terbuka = sidebar.classList.toggle("open");
-        menuToggle.setAttribute("aria-expanded", String(terbuka));
-      });
-    }
+      if (menuToggle && sidebar) {
+        menuToggle.addEventListener("click", () => {
+          const terbuka = sidebar.classList.toggle("open");
+          menuToggle.setAttribute(
+            "aria-expanded",
+            String(terbuka)
+          );
+        });
+      }
+    })();
   </script>
 </body>
 </html>
