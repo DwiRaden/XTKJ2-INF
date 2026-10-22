@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#09090d">
+  <title>Masuk — Kelas Kita X TKJ 2</title>
+
+  <style>
+    :root {
+      --bg: #09090d;
+      --panel: #12121b;
+      --border: #272738;
+      --text: #f4f4fb;
+      --muted: #9898ad;
+      --accent: #8b8cff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at top, #25254b 0%, transparent 55%),
+        var(--bg);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 430px;
+      animation: appear .5s ease both;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #a2a3ff, #6869ed);
+      color: #09090d;
+      font-size: 22px;
+      font-weight: 900;
+      box-shadow: 0 10px 35px #7777ff30;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 29px;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 9px 0 0;
+      font-size: 14px;
+    }
+
+    .panel {
+      padding: 25px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: #12121beF;
+      box-shadow: 0 24px 80px #00000040;
+    }
+
+    .panel h2 {
+      font-size: 17px;
+      margin: 0 0 8px;
+    }
+
+    .description {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0 0 22px;
+    }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 16px;
+      margin-top: 12px;
+      text-align: left;
+      color: var(--text);
+      background: #191925;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform .2s, border-color .2s, background .2s;
+    }
+
+    .choice:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      background: #202035;
+    }
+
+    .choice-icon {
+      display: grid;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: #292943;
+      font-size: 20px;
+    }
+
+    .choice-copy {
+      flex: 1;
+    }
+
+    .choice-copy strong,
+    .choice-copy small {
+      display: block;
+    }
+
+    .choice-copy strong {
+      font-size: 14px;
+    }
+
+    .choice-copy small {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .arrow {
+      color: var(--muted);
+      font-size: 20px;
+    }
+
+    .login-form {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .login-form.show {
+      display: block;
+      animation: appear .25s ease both;
+    }
+
+    label {
+      display: block;
+      margin: 14px 0 7px;
+      color: #d4d4e5;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      background: #0c0c14;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px #8b8cff20;
+    }
+
+    .submit,
+    .back {
+      width: 100%;
+      padding: 13px;
+      margin-top: 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .submit {
+      color: #09090d;
+      background: var(--accent);
+      border: 0;
+    }
+
+    .submit:hover {
+      background: #a6a7ff;
+    }
+
+    .back {
+      margin-top: 9px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--border);
+    }
+
+    .message {
+      min-height: 18px;
+      margin: 12px 0 0;
+      color: #ff9292;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      margin-top: 22px;
+      text-align: center;
+      color: #77778d;
+      font-size: 11px;
+    }
+
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 420px) {
+      body {
+        padding: 16px;
+      }
+
+      .panel {
+        padding: 20px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <header class="brand">
+      <div class="logo">KK</div>
+      <h1>Kelas Kita</h1>
+      <p class="subtitle">Portal informasi kelas X TKJ 2</p>
+    </header>
+
+    <section class="panel">
+      <h2>Selamat datang 👋</h2>
+      <p class="description">
+        Pilih cara masuk untuk melihat informasi kelas.
+      </p>
+
+      <button class="choice" id="guest-button" type="button">
+        <span class="choice-icon">👁</span>
+        <span class="choice-copy">
+          <strong>Masuk sebagai Guest</strong>
+          <small>Lihat tugas, jadwal, seragam, piket, dan report taruna.</small>
+        </span>
+        <span class="arrow">›</span>
+      </button>
+
+      <button class="choice" id="admin-button" type="button">
+        <span class="choice-icon">🔐</span>
+        <span class="choice-copy">
+          <strong>Login Pengurus</strong>
+          <small>Masuk untuk mengelola informasi kelas.</small>
+        </span>
+        <span class="arrow">›</span>
+      </button>
+
+      <form class="login-form" id="login-form">
+        <h2>Login Pengurus</h2>
+        <p class="description">
+          Masukkan akun pengurus yang telah terdaftar.
+        </p>
+
+        <label for="username">Username / email</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          autocomplete="username"
+          placeholder="Masukkan username"
+          required
+        >
+
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Masukkan password"
+          required
+        >
+
+        <button class="submit" type="submit">Masuk</button>
+        <button class="back" id="back-button" type="button">
+          Kembali
+        </button>
+
+        <p class="message" id="message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <footer class="footer">
+      Kelas Kita · X TKJ 2<br>
+      Informasi kelas dalam satu tempat.
+    </footer>
+  </main>
+
+  <script>
+    const guestButton = document.getElementById("guest-button");
+    const adminButton = document.getElementById("admin-button");
+    const loginForm = document.getElementById("login-form");
+    const backButton = document.getElementById("back-button");
+    const message = document.getElementById("message");
+
+    adminButton.addEventListener("click", () => {
+      loginForm.classList.add("show");
+      message.textContent = "";
+      document.getElementById("username").focus();
+    });
+
+    backButton.addEventListener("click", () => {
+      loginForm.classList.remove("show");
+      loginForm.reset();
+      message.textContent = "";
+    });
+
+    guestButton.addEventListener("click", () => {
+      window.location.href = "index.html?mode=guest";
+    });
+
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      message.textContent =
+        "Login belum dihubungkan. Langkah berikutnya adalah menyambungkan Supabase Auth.";
+    });
+  </script>
+</body>
+</html>
