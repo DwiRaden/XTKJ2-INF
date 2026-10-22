@@ -1,3 +1,4 @@
+
 "use strict";
 
 // ===============================
@@ -56,8 +57,8 @@ const $ = id => document.getElementById(id);
 let currentUser = null;
 let izinKategori = [];
 let semuaData = [];
-let guestMode = new URLSearchParams(location.search).get("mode") === "guest";
 let sedangMemuat = false;
+let prosesSesi = Promise.resolve();
 
 // ===============================
 // UTILITAS
@@ -88,7 +89,53 @@ function kosong(pesan = "Belum ada informasi.") {
 }
 
 function bolehEdit(kategori) {
-  return Boolean(currentUser && izinKategori.includes(kategori));
+  return Boolean(
+    currentUser &&
+    izinKategori.includes(kategori)
+  );
+}
+
+// ===============================
+// KUNCI TAMPILAN SEBELUM LOGIN
+// ===============================
+function aturTampilanLogin() {
+  const sudahLogin = Boolean(currentUser);
+
+  if ($("login-form")) {
+    $("login-form").hidden = sudahLogin;
+  }
+
+  if ($("guest-button")) {
+    $("guest-button").hidden = true;
+  }
+
+  if ($("account-info")) {
+    $("account-info").hidden = !sudahLogin;
+  }
+
+  if ($("logout-button")) {
+    $("logout-button").hidden = !sudahLogin;
+  }
+
+  if ($("management-panel")) {
+    $("management-panel").hidden =
+      !sudahLogin || izinKategori.length === 0;
+  }
+
+  // Sembunyikan isi aplikasi sebelum autentikasi.
+  document.querySelectorAll(".sidebar, .main-content").forEach(el => {
+    el.hidden = !sudahLogin;
+  });
+
+  if ($("account-email")) {
+    $("account-email").textContent = sudahLogin
+      ? `Login sebagai: ${
+          currentUser.user_metadata?.username ||
+          currentUser.email ||
+          "Pengguna"
+        }`
+      : "";
+  }
 }
 
 // ===============================
@@ -117,13 +164,15 @@ function resetForm() {
   form.reset();
 
   if ($("info-id")) $("info-id").value = "";
-  if ($("save-button")) $("save-button").textContent = "Simpan informasi";
+  if ($("save-button")) {
+    $("save-button").textContent = "Simpan informasi";
+  }
   if ($("cancel-edit")) $("cancel-edit").hidden = true;
 }
 
 function mulaiEdit(item) {
   if (!bolehEdit(item.kategori)) {
-    status("Akunmu tidak memiliki izin mengedit kategori ini.");
+    status("Akunmu tidak memiliki izin mengedit informasi ini.");
     return;
   }
 
@@ -132,8 +181,11 @@ function mulaiEdit(item) {
   $("info-title").value = item.judul || "";
   $("info-date").value = item.tanggal || "";
   $("info-content").value = item.isi || "";
-  $("save-button").textContent = "Simpan perubahan";
-  $("cancel-edit").hidden = false;
+
+  if ($("save-button")) {
+    $("save-button").textContent = "Simpan perubahan";
+  }
+  if ($("cancel-edit")) $("cancel-edit").hidden = false;
 
   $("management-panel")?.scrollIntoView({
     behavior: "smooth",
@@ -142,7 +194,7 @@ function mulaiEdit(item) {
 }
 
 // ===============================
-// TAMPILKAN KARTU INFORMASI
+// KARTU INFORMASI
 // ===============================
 function kartuInformasi(item) {
   const card = document.createElement("article");
@@ -197,14 +249,18 @@ function renderKategori(kategori) {
 
   container.replaceChildren();
 
-  const items = semuaData.filter(item => item.kategori === kategori);
+  const items = semuaData.filter(
+    item => item.kategori === kategori
+  );
 
   if (!items.length) {
     container.appendChild(kosong());
     return;
   }
 
-  items.forEach(item => container.appendChild(kartuInformasi(item)));
+  items.forEach(item => {
+    container.appendChild(kartuInformasi(item));
+  });
 }
 
 function renderDashboard() {
@@ -238,10 +294,21 @@ function renderDashboard() {
   });
 }
 
+function kosongkanData() {
+  semuaData = [];
+  renderDashboard();
+  KATEGORI.forEach(renderKategori);
+}
+
 // ===============================
-// MUAT DATA DARI SUPABASE
+// MUAT DATA
 // ===============================
 async function muatData() {
+  if (!currentUser) {
+    kosongkanData();
+    return;
+  }
+
   if (sedangMemuat) return;
   sedangMemuat = true;
 
@@ -255,6 +322,12 @@ async function muatData() {
 
     if (error) throw error;
 
+    // Jangan tampilkan hasil jika sesi berubah saat query berjalan.
+    if (!currentUser) {
+      kosongkanData();
+      return;
+    }
+
     semuaData = (data || []).filter(item =>
       KATEGORI.includes(item.kategori)
     );
@@ -265,7 +338,7 @@ async function muatData() {
     status(`Informasi berhasil dimuat · ${semuaData.length} data`);
   } catch (error) {
     console.error("Gagal memuat informasi:", error);
-    status("Gagal memuat informasi. Periksa koneksi, key, tabel, dan RLS.");
+    status("Gagal memuat informasi. Periksa koneksi dan RLS.");
   } finally {
     sedangMemuat = false;
   }
@@ -278,87 +351,66 @@ async function muatIzin() {
   izinKategori = [];
 
   if (currentUser) {
+    const userId = currentUser.id;
+
     const { data, error } = await supabaseClient
       .from("manager_permissions")
-      .select("kategori")
-      .eq("user_id", currentUser.id);
+      .select("user_id")
+      .eq("user_id", userId);
 
     if (error) {
       console.error("Gagal membaca izin:", error);
-      status("Izin akun gagal dibaca. Periksa tabel manager_permissions.");
-    } else {
-      izinKategori = [...new Set(
-        (data || [])
-          .map(row => row.kategori)
-          .filter(kategori => KATEGORI.includes(kategori))
-      )];
+      status("Izin akun gagal dibaca.");
+    } else if (
+      currentUser &&
+      currentUser.id === userId &&
+      data?.length
+    ) {
+      // Satu baris izin sudah cukup untuk menandai pengurus.
+      izinKategori = [...KATEGORI];
     }
   }
 
-  if ($("login-form")) {
-    $("login-form").hidden = Boolean(currentUser) || guestMode;
-  }
-
-  if ($("guest-button")) {
-    $("guest-button").hidden = Boolean(currentUser) || guestMode;
-  }
-
-  if ($("account-info")) {
-    $("account-info").hidden = !currentUser && !guestMode;
-  }
-
-  if ($("management-panel")) {
-    $("management-panel").hidden =
-      !currentUser || izinKategori.length === 0;
-  }
-
-  if ($("account-email")) {
-    if (currentUser) {
-      $("account-email").textContent =
-        `Login sebagai pengurus: ${currentUser.user_metadata?.username || currentUser.email}`;
-    } else if (guestMode) {
-      $("account-email").textContent =
-        "Kamu masuk sebagai Guest — akses hanya baca.";
-    } else {
-      $("account-email").textContent = "";
-    }
-  }
-
-  if ($("logout-button")) {
-    $("logout-button").textContent =
-      guestMode && !currentUser ? "Keluar dari Guest" : "Logout";
-  }
-
+  aturTampilanLogin();
   isiPilihanKategori();
   resetForm();
 }
 
 // ===============================
-// SESI LOGIN
+// SINKRONISASI SESI
 // ===============================
 async function perbaruiSesi() {
   const { data, error } = await supabaseClient.auth.getSession();
 
   if (error) {
-    console.error(error);
+    console.error("Gagal memeriksa sesi:", error);
+    currentUser = null;
+    izinKategori = [];
+    aturTampilanLogin();
+    kosongkanData();
     status("Gagal memeriksa sesi login.");
     return;
   }
 
   currentUser = data.session?.user || null;
 
-  if (currentUser) guestMode = false;
-
   await muatIzin();
-  await muatData();
+  aturTampilanLogin();
+
+  if (currentUser) {
+    await muatData();
+  } else {
+    kosongkanData();
+    status("Silakan login untuk melihat informasi kelas.");
+  }
 }
 
 // ===============================
-// LOGIN PENGURUS
-// Username dipetakan ke email khusus.
-// Akun harus dibuat terlebih dahulu di Supabase Auth.
+// LOGIN
 // ===============================
 if ($("login-form")) {
+  $("login-form").hidden = true;
+
   $("login-form").addEventListener("submit", async event => {
     event.preventDefault();
 
@@ -370,49 +422,47 @@ if ($("login-form")) {
       return;
     }
 
-    const email = `${username}@kelas-kita.local`;
+    if (!password) {
+      status("Masukkan password terlebih dahulu.");
+      return;
+    }
 
-    status("Mencoba login pengurus...");
+    const submitButton = $("login-form").querySelector(
+      '[type="submit"]'
+    );
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password
-    });
+    if (submitButton) submitButton.disabled = true;
 
-    if (error) {
+    status("Mencoba login...");
+
+    try {
+      const email = `${username}@kelas-kita.local`;
+
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if ($("login-password")) $("login-password").value = "";
+
+      // Callback autentikasi akan memperbarui tampilan dan data.
+      await perbaruiSesi();
+
+      if (!currentUser) {
+        status("Login belum berhasil diverifikasi.");
+      } else if (izinKategori.length) {
+        status("Login berhasil.");
+      } else {
+        status("Login berhasil. Akun ini hanya bisa melihat informasi.");
+      }
+    } catch (error) {
       console.error("Login gagal:", error.message);
       status("Login gagal. Periksa username dan password.");
-      return;
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
-
-    guestMode = false;
-    $("login-password").value = "";
-
-    await perbaruiSesi();
-
-    status(
-      izinKategori.length
-        ? "Login berhasil."
-        : "Login berhasil, tetapi akun belum memiliki izin kategori."
-    );
-  });
-}
-
-// ===============================
-// MODE GUEST
-// ===============================
-if ($("guest-button")) {
-  $("guest-button").addEventListener("click", async () => {
-    if (currentUser) {
-      status("Logout dari akun pengurus terlebih dahulu.");
-      return;
-    }
-
-    guestMode = true;
-    await muatIzin();
-    await muatData();
-
-    status("Masuk sebagai Guest. Akses hanya baca.");
   });
 }
 
@@ -421,24 +471,22 @@ if ($("guest-button")) {
 // ===============================
 if ($("logout-button")) {
   $("logout-button").addEventListener("click", async () => {
-    if (currentUser) {
-      const { error } = await supabaseClient.auth.signOut();
+    status("Keluar dari akun...");
 
-      if (error) {
-        console.error(error);
-        status("Gagal logout.");
-        return;
-      }
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+      console.error("Logout gagal:", error);
+      status("Gagal logout. Coba lagi.");
+      return;
     }
 
     currentUser = null;
-    guestMode = false;
     izinKategori = [];
 
-    await muatIzin();
-    await muatData();
-
-    status("Kamu sudah keluar.");
+    aturTampilanLogin();
+    kosongkanData();
+    status("Kamu sudah logout.");
   });
 }
 
@@ -450,7 +498,7 @@ if ($("info-form")) {
     event.preventDefault();
 
     if (!currentUser) {
-      status("Login sebagai pengurus untuk mengelola informasi.");
+      status("Login terlebih dahulu.");
       return;
     }
 
@@ -458,7 +506,7 @@ if ($("info-form")) {
     const kategori = $("info-category").value;
 
     if (!bolehEdit(kategori)) {
-      status("Akunmu tidak memiliki izin untuk kategori ini.");
+      status("Akun ini tidak memiliki izin pengurus.");
       return;
     }
 
@@ -489,13 +537,13 @@ if ($("info-form")) {
           .select("id");
 
     if (result.error) {
-      console.error(result.error);
-      status("Gagal menyimpan. Periksa izin RLS di Supabase.");
+      console.error("Gagal menyimpan:", result.error);
+      status("Gagal menyimpan. Periksa izin RLS.");
       return;
     }
 
     if (!result.data?.length) {
-      status("Tidak ada data berubah. Periksa izin RLS atau ID data.");
+      status("Data tidak berubah. Periksa izin atau ID data.");
       return;
     }
 
@@ -518,21 +566,27 @@ if ($("refresh-button")) {
 // ===============================
 async function hapusItem(item) {
   if (!bolehEdit(item.kategori)) {
-    status("Akunmu tidak memiliki izin menghapus kategori ini.");
+    status("Akun ini tidak memiliki izin pengurus.");
     return;
   }
 
   if (!confirm(`Hapus informasi "${item.judul}"?`)) return;
 
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("kelas_info")
     .delete()
     .eq("id", item.id)
-    .eq("kategori", item.kategori);
+    .eq("kategori", item.kategori)
+    .select("id");
 
   if (error) {
-    console.error(error);
+    console.error("Gagal menghapus:", error);
     status("Gagal menghapus. Periksa izin RLS.");
+    return;
+  }
+
+  if (!data?.length) {
+    status("Data tidak terhapus. Periksa izin RLS.");
     return;
   }
 
@@ -545,6 +599,11 @@ async function hapusItem(item) {
 // ===============================
 document.querySelectorAll(".nav-item").forEach(button => {
   button.addEventListener("click", () => {
+    if (!currentUser) {
+      status("Login terlebih dahulu.");
+      return;
+    }
+
     const page = button.dataset.page;
 
     document.querySelectorAll(".nav-item").forEach(item => {
@@ -552,7 +611,10 @@ document.querySelectorAll(".nav-item").forEach(button => {
     });
 
     document.querySelectorAll(".page").forEach(section => {
-      section.classList.toggle("active", section.id === `page-${page}`);
+      section.classList.toggle(
+        "active",
+        section.id === `page-${page}`
+      );
     });
 
     const [title, subtitle] = HALAMAN[page] || HALAMAN.dashboard;
@@ -564,16 +626,28 @@ document.querySelectorAll(".nav-item").forEach(button => {
 
 window.tesSupabase = muatData;
 
-// Jangan melakukan query Supabase langsung di callback auth.
+// ===============================
+// AUTH STATE
+// ===============================
 supabaseClient.auth.onAuthStateChange((_event, session) => {
-  currentUser = session?.user || null;
+  // Proses secara berurutan agar event sesi tidak saling menimpa.
+  prosesSesi = prosesSesi.then(async () => {
+    currentUser = session?.user || null;
 
-  if (currentUser) guestMode = false;
-
-  Promise.resolve().then(async () => {
     await muatIzin();
-    await muatData();
+    aturTampilanLogin();
+
+    if (currentUser) {
+      await muatData();
+    } else {
+      kosongkanData();
+      status("Silakan login untuk melihat informasi kelas.");
+    }
+  }).catch(error => {
+    console.error("Gagal memperbarui sesi:", error);
+    status("Terjadi kesalahan saat memperbarui sesi.");
   });
 });
 
+// Mulai dengan memeriksa sesi login yang tersimpan.
 perbaruiSesi();
