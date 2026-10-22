@@ -83,7 +83,7 @@ body > .topbar {
   gap: 20px;
   min-height: 76px;
   padding: 14px 30px;
-  background: #0b0b12eF;
+  background: #0b0b12ef;
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(18px);
 }
@@ -465,7 +465,7 @@ body > .topbar {
   border-radius: 12px;
 }
 
-/* FORMS */
+/* FORMULIR */
 
 .form-grid {
   display: grid;
@@ -521,7 +521,7 @@ input[type="date"] {
   color-scheme: dark;
 }
 
-/* BUTTONS */
+/* TOMBOL */
 
 .button {
   display: inline-flex;
@@ -573,6 +573,43 @@ input[type="date"] {
 .button.danger:hover {
   background: #fb71851a;
   border-color: #fb718566;
+}
+
+/* LABEL JADWAL RUTIN DAN KHUSUS */
+
+.jadwal-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 0 0 10px;
+  padding: 5px 9px;
+  border: 1px solid #818cf844;
+  border-radius: 999px;
+  background: #818cf815;
+  color: #c7c9ff;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+/* KARTU JADWAL HARI INI */
+
+.jadwal-hari-ini {
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: linear-gradient(135deg, #818cf815, #191927);
+}
+
+.jadwal-hari-ini h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+}
+
+.jadwal-hari-ini p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 /* FOOTER */
